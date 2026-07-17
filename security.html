@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-text-size="standard">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="referrer" content="no-referrer" />
+<meta name="description" content="Security review and pilot plan for the Rounds side panel: architecture, data flow, permissions, threats, and the staging trial plan for Oaklawn IT." />
+<title>Security review | Rounds</title>
+<script>(function(){var d=document.documentElement;try{d.dataset.theme=localStorage.getItem("rounds-docs-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");d.dataset.textSize=localStorage.getItem("rounds-docs-text")||"standard"}catch(e){}})()</script>
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to the review</a>
+
+<div class="reading-progress" aria-hidden="true"><span id="readingProgress"></span></div>
+
+<header class="document-header">
+  <div class="header-inner">
+    <a class="site-name" href="index.html"><strong>Rounds</strong><span>Clinician documentation</span></a>
+    <nav aria-label="Primary">
+      <a href="index.html">Panel walkthrough</a>
+      <a href="security.html" aria-current="page">Security review</a>
+      <a href="https://github.com/editnori/rounds" rel="noreferrer" title="Private repository">Source</a>
+    </nav>
+    <div class="reader-tools" role="group" aria-label="Reading controls">
+      <div class="text-scale" role="group" aria-label="Article text size">
+        <button type="button" data-text-size="standard" aria-pressed="true">A</button>
+        <button type="button" data-text-size="large" aria-pressed="false">A+</button>
+      </div>
+      <button class="theme-button" id="themeButton" type="button" aria-pressed="false">Dark</button>
+    </div>
+    <button class="contents-button" id="contentsButton" type="button" aria-expanded="false" aria-controls="contentsRail">Contents</button>
+  </div>
+</header>
+
+<div class="document-shell">
+  <aside class="contents" id="contentsRail" aria-label="Documentation contents">
+    <p>On this page</p>
+    <nav>
+      <span class="contents-group">Walkthrough</span>
+      <a href="index.html">Panel walkthrough</a>
+      <span class="contents-group">Security review</span>
+      <a href="#security">Purpose and scope</a>
+      <a href="#sec-architecture">Architecture</a>
+      <a href="#sec-data">Data flow and inventory</a>
+      <a href="#sec-network">Network behavior</a>
+      <a href="#sec-permissions">Permissions</a>
+      <a href="#sec-threats">Threats</a>
+      <a href="#sec-rules">Auto-grouping</a>
+      <a href="#sec-pilot">Pilot criteria</a>
+      <a href="#sec-rollout">Rollout</a>
+      <a href="#sec-questions">Open questions for IT</a>
+    </nav>
+    <div class="contents-version">
+      <span>Security review</span>
+      <code>rounds 0.2.0</code>
+      <code>11 sections</code>
+      <code>verify as you read</code>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <article>
+      <header class="article-header" id="security">
+        <div class="publication-line">
+          <span>Security review and pilot plan</span>
+          <span>Prepared for Oaklawn Psychiatric Center, IT / Security</span>
+          <span>Covers Rounds v0.2.0</span>
+        </div>
+        <h1>Security review</h1>
+        <h2 style="margin-top:30px">1. Purpose and scope</h2>
+        <p>Rounds is a side-panel companion that turns the <strong>Memo to Chart alerts already on the clinician's screen</strong> into a triage inbox, and uses CareLogic's <strong>own</strong> links and forms when the clinician acts. CareLogic remains the sole system of record; Rounds stores no clinical record of its own. The <a href="index.html">walkthrough</a> shows every claim in this section live, on fictional sample data; ask for the 30-minute demo and verify as you read.</p>
+        <p>Explicit negatives, up front:</p>
+        <ul>
+          <li><strong>No servers.</strong> The extension has no backend, no account system, and no sync.</li>
+          <li><strong>No network access.</strong> The manifest's content security policy is <code>default-src 'none'</code>: the browser refuses any request the extension might try to make. v0.2 removed the last external fetch (a font) by bundling it.</li>
+          <li><strong>No telemetry or analytics.</strong> Nothing is measured off the machine.</li>
+          <li><strong>No AI.</strong> Memo grouping is deterministic word matching; the complete vocabulary is printed inside the panel. There is no model, no learning, no cloud inference.</li>
+          <li><strong>No patient-facing surface.</strong> Rounds is visible only to the logged-in clinician.</li>
+        </ul>
+      </header>
+
+      <section class="walkthrough-step" id="sec-architecture">
+        <h2>2. Architecture</h2>
+        <p>Three components, roughly 2,500 lines of plain JavaScript plus one classifier file. <strong>Zero third-party dependencies, no build step.</strong> The code that ships is the code that runs, reviewable in one sitting. We offer a live walkthrough of every file.</p>
+        <div class="table-scroll"><table class="doc-table">
+          <tr><th>Component</th><th>Runs where</th><th>Job</th></tr>
+          <tr><td><code>content/carelogic.js</code></td><td>The CareLogic tab</td><td>Reads the alerts table from the page DOM; executes clinician-initiated commands by clicking the page's own links. v0.2 changes it only to add guards: header-mapped column parsing (agency layout variations parse correctly or refuse cleanly) and a wrong-patient check on the memo-form write (§7).</td></tr>
+          <tr><td><code>background.js</code></td><td>Extension service worker</td><td>Remembers which tab produced the scan, relays commands, enforces the pause switch by dropping scans before they touch storage.</td></tr>
+          <tr><td><code>panel/</code></td><td>The side panel</td><td>All UI, all state, the grouping rules (<code>panel/rules.js</code>), and the Data &amp; privacy view.</td></tr>
+        </table></div>
+      </section>
+
+      <section class="walkthrough-step" id="sec-data">
+        <h2>3. Data flow</h2>
+        <p>One boundary box: <strong>the Chrome profile on the clinician's workstation.</strong> Nothing crosses it.</p>
+<figure class="flow">
+  <div class="flow-legend" aria-hidden="true">
+    <button type="button" class="flow-key read" data-path="read"><i></i>Read path</button>
+    <button type="button" class="flow-key write" data-path="write"><i></i>Write path</button>
+  </div>
+  <svg id="flowSvg" viewBox="0 0 640 250" role="img" aria-label="Data flow: the CareLogic page is read by the content script, which stores rows in extension storage, which the side panel shows. The write path goes from the side panel back to the CareLogic page: it clicks Select or Remove and types your reply, only when you act. Every box sits inside the Chrome profile on the workstation and no arrow leaves it.">
+    <defs>
+      <marker id="arrR" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" style="fill: var(--blue)"/></marker>
+      <marker id="arrW" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" style="fill: var(--green)"/></marker>
+    </defs>
+    <rect class="boundary" x="8" y="12" width="624" height="226" rx="16"/>
+    <text class="boundary-label" x="26" y="38">Chrome profile on the clinician's workstation</text>
+
+    <path class="edge read" d="M150 112 H 186" marker-end="url(#arrR)"/>
+    <path class="edge read" d="M324 112 H 360" marker-end="url(#arrR)"/>
+    <path class="edge read" d="M498 112 H 522" marker-end="url(#arrR)"/>
+    <text class="edge-label read" x="168" y="100" text-anchor="middle">reads</text>
+    <text class="edge-label read" x="342" y="100" text-anchor="middle">stores</text>
+    <text class="edge-label read" x="503" y="100" text-anchor="middle">shows</text>
+
+    <path class="edge write" d="M574 140 V 192 H 90 V 146" marker-end="url(#arrW)"/>
+    <text class="edge-label write" x="332" y="184" text-anchor="middle">clicks Select or Remove, types your reply (only when you act)</text>
+
+    <g class="node" data-cap="CareLogic's own page. Rounds reads the alerts table that is already on screen and clicks the same links you would.">
+      <rect x="30" y="86" width="120" height="52" rx="10"/>
+      <text x="90" y="109">CareLogic</text>
+      <text x="90" y="125">page</text>
+    </g>
+    <g class="node" data-cap="content/carelogic.js. Parses the table rows and runs your commands. It never signs and never submits.">
+      <rect x="190" y="86" width="134" height="52" rx="10"/>
+      <text x="257" y="109">Content script</text>
+      <text class="sub" x="257" y="125">runs in the tab</text>
+    </g>
+    <g class="node" data-cap="chrome.storage.local. Rows from the last read, your groups and flags, drafts, and the action log. Cleared on tab close, expiry, or Clear all local data.">
+      <rect x="364" y="86" width="134" height="52" rx="10"/>
+      <text x="431" y="109">Extension storage</text>
+      <text class="sub" x="431" y="125">on this machine</text>
+    </g>
+    <g class="node" data-cap="The Rounds panel. All UI and all rules run here, next to the EHR, never on a server.">
+      <rect x="526" y="86" width="88" height="52" rx="10"/>
+      <text x="570" y="115">Side panel</text>
+    </g>
+  </svg>
+  <figcaption class="flow-cap" id="flowCap">No arrow leaves the box. Hover a box or a path key for details.</figcaption>
+</figure>
+        <p>The extension adds no network edges to this diagram, and none can be added silently: the CSP forbids them and any change requires shipping a new reviewed version.</p>
+
+        <h2 style="margin-top:34px">4. Data inventory</h2>
+        <div class="table-scroll"><table class="doc-table">
+          <tr><th>Element</th><th>Contains PHI?</th><th>Where</th><th>Written when</th><th>Cleared when</th></tr>
+          <tr><td><code>liveScan</code> (rows from the last page read)</td><td>Yes: name, chart ID, DOB, narrative</td><td><code>chrome.storage.local</code></td><td>Content script scans the alerts table</td><td>Tab closes, browser restarts, pause is switched on, or 30 minutes after the last read</td></tr>
+          <tr><td>Triage marks (read/flag/groups/overrides)</td><td>Keyed by chart ID + timestamp; no narrative</td><td>same</td><td>Clinician acts</td><td>Alert cleared; entries unused for 60 days are pruned</td></tr>
+          <tr><td>Unsent drafts</td><td>Yes: clinician-typed narrative</td><td>same</td><td>Clinician types</td><td>Filed, cleared with the memo, or cleared by hand</td></tr>
+          <tr><td>Action log</td><td>Chart IDs only, never names</td><td>same</td><td>Every command Rounds performs (or refuses) in CareLogic</td><td>FIFO, capped at 50 entries</td></tr>
+          <tr><td>Electronic signature</td><td>n/a</td><td colspan="3"><strong>Never stored.</strong> Used once at file time, exactly like CareLogic's signature screen.</td></tr>
+          <tr><td>Cookies / session tokens</td><td>n/a</td><td colspan="3"><strong>Never read.</strong> Rounds sees the page DOM, not the session.</td></tr>
+        </table></div>
+        <p>At rest: <code>chrome.storage.local</code> is not application-encrypted. Protection is the same stack that protects the CareLogic browser session on that workstation: OS accounts, per-user Chrome profiles, and full-disk encryption per agency policy (see open question Q3). The panel's <strong>Clear all local data</strong> control removes everything Rounds has stored in two presses.</p>
+      </section>
+
+      <section class="walkthrough-step" id="sec-network">
+        <h2>5. Network behavior</h2>
+        <div class="check-head"><p>Claimed: zero extension-originated requests. Verify it yourselves; the page remembers your progress on this machine.</p><span class="check-count" data-count="verify"></span></div>
+        <ul class="check-list" data-checklist="verify">
+          <li><label><input type="checkbox"><span>Load the extension, open DevTools → Network on the panel, and drive every flow in the walkthrough. Expected extension-origin requests: none.</span></label></li>
+          <li><label><input type="checkbox"><span>Capture <code>chrome://net-export</code> during a session and filter by the extension ID. Expected: nothing.</span></label></li>
+          <li><label><input type="checkbox"><span>Read <code>manifest.json</code>: <code>"content_security_policy": { "extension_pages": "default-src 'none'; …" }</code>; no <code>connect-src</code> is granted at all.</span></label></li>
+        </ul>
+      </section>
+
+      <section class="walkthrough-step" id="sec-permissions">
+        <h2>6. Permissions</h2>
+        <div class="table-scroll"><table class="doc-table">
+          <tr><th>Permission</th><th>Why</th><th>Blast radius</th></tr>
+          <tr><td><code>sidePanel</code></td><td>The UI is a side panel</td><td>UI placement only</td></tr>
+          <tr><td><code>storage</code></td><td>Local triage state</td><td>This extension's own storage area</td></tr>
+          <tr><td><code>https://*.qualifacts.org/*</code></td><td>Read the alerts table, click its links</td><td><strong>Pinned to the agency's exact CareLogic hostname for the trial build</strong> (Q1)</td></tr>
+          <tr><td><code>all_frames: true</code></td><td>CareLogic renders content in nested frames</td><td>Same host scope as above</td></tr>
+        </table></div>
+        <p>The absence list is the stronger half: <strong>no</strong> <code>tabs</code>, <strong>no</strong> <code>scripting</code>, <strong>no</strong> <code>webRequest</code>, <strong>no</strong> <code>cookies</code>, <strong>no</strong> <code>downloads</code>, <strong>no</strong> <code>nativeMessaging</code>, <strong>no</strong> <code>externally_connectable</code>, <strong>no</strong> <code>web_accessible_resources</code>. Rounds cannot enumerate tabs, inject code on demand, observe traffic, read cookies, or be messaged by any web page.</p>
+      </section>
+
+      <section class="walkthrough-step" id="sec-threats">
+        <h2>7. Threats</h2>
+        <ul>
+          <li><strong>Injected/scraped content (XSS).</strong> Everything read from the page is HTML-escaped before rendering, and the CSP blocks script injection into the panel. We ship a regression memo containing an <code>&lt;img onerror&gt;</code> payload in the staging seed to prove the sink is closed.</li>
+          <li><strong>Wrong-patient action.</strong> Commands address rows by parsed identity (chart ID + sent time), re-resolved against the live table at click time. Zero or multiple matches: the command <strong>refuses</strong> rather than clicking the wrong row, and the refusal is written to the visible action log. The memo-form write carries the same protection: it refuses unless the page holding the form displays the target client's chart ID ("refused (different client on screen)" in the action log). A refusal is the guard working; a misdirected click is a stop-ship defect.</li>
+          <li><strong>Session misuse.</strong> All commands originate from a clinician gesture in the panel. Web pages cannot message the extension (<code>externally_connectable</code> absent). Rounds never signs and never submits a form.</li>
+          <li><strong>Supply chain.</strong> No third-party code, no package manager, no build step. The delivered zip is hashed; the hash is in the delivery note.</li>
+          <li><strong>Shared workstations.</strong> Rounds inherits the agency's lock/timeout policy; the 30-minute live-data expiry and 60-day triage prune bound what an unlocked session exposes. Q3/Q7 below.</li>
+          <li><strong>Host upgrades.</strong> If a CareLogic update changes the page markup, scanning fails safe: the panel shows nothing new and performs no writes; selectors live in one tunable block at the top of the content script.</li>
+        </ul>
+      </section>
+
+      <section class="walkthrough-step" id="sec-rules">
+        <h2>8. Auto-grouping</h2>
+        <p>Grouping is a fixed, versioned set of word rules (<code>panel/rules.js</code>, rule set v1) evaluated locally against each memo's narrative. Identical input produces identical grouping on every machine. The panel prints every rule, every term, a live match count, and a switch per rule plus a master switch. Clinician overrides always win: a manually removed group is recorded per-memo and never re-applied by rules; a manually added group is untouchable by rules. There is no learning component; behavior changes only through a shipped, reviewable update.</p>
+      </section>
+
+      <section class="walkthrough-step" id="sec-pilot">
+        <h2>9. Pilot success criteria</h2>
+        <ol>
+          <li>Median memo triage ≤ 30 seconds, against the ~6-click / 2-page-load baseline (observed, not instrumented).</li>
+          <li><strong>Zero</strong> wrong-row actions across the pilot. Logged refusals are acceptable and expected; any misdirected click stops the pilot.</li>
+          <li>≤ 1 selector patch needed after week 1 against the agency's CareLogic build.</li>
+          <li>≥ 4 of 5 pilot clinicians still using the panel in week 4, unprompted.</li>
+          <li>IT verification passes at close: zero extension-origin network requests; storage contents match §4.</li>
+        </ol>
+      </section>
+
+      <section class="walkthrough-step" id="sec-rollout">
+        <h2>10. Rollout</h2>
+        <ul>
+          <li><strong>Phase 0: review (this document).</strong> Packet review, code walkthrough, live network capture. Exit: IT sign-off for staging.</li>
+          <li><strong>Phase 1: staging.</strong> Staging CareLogic account (test patients only), verify selectors against the agency build, one workstation. Exit: scan + all three commands verified on the staging build.</li>
+          <li><strong>Phase 2: pilot.</strong> 3 to 5 clinicians, 4 weeks, weekly 20-minute feedback session. Kill switch: Chrome policy blocklist or simple removal; revocation is complete because everything is local.</li>
+          <li><strong>Phase 3: go/no-go.</strong> Review against §9; scope v0.3 (candidate items: agency-defined groups, vetted rule additions, reading the full note behind Select; explored: nursing/refill workflow expansion).</li>
+        </ul>
+      </section>
+
+      <section class="walkthrough-step" id="sec-questions">
+        <h2>11. Open questions for IT</h2>
+        <div class="check-head"><p>Check each one off as it gets an answer; the page remembers.</p><span class="check-count" data-count="itq"></span></div>
+        <ul class="check-list" data-checklist="itq">
+          <li><label><input type="checkbox"><span><strong>Q1</strong> Exact staging and production CareLogic hostnames, so the trial build pins <code>host_permissions</code> to them.</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q2</strong> Preferred distribution: Chrome policy force-install, unlisted Web Store, or supervised sideload? Is developer mode permitted on clinical workstations?</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q3</strong> Are full-disk encryption and single-user Chrome profiles enforced on target workstations?</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q4</strong> Chrome version floor: Rounds declares ≥ 123; does the fleet meet it?</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q5</strong> What does the CareLogic session-timeout landing page look like, so scanning can be verified to fail safe against it?</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q6</strong> Is the local, capped action log sufficient for audit, or is an exportable log required? (Export is a data-egress decision Oaklawn should own; v0.2 deliberately ships without it.)</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q7</strong> Do DLP/endpoint agents on clinical workstations interact with extension storage or side panels in ways we should test?</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q8</strong> Can we get change-control notice ahead of CareLogic upgrades during the pilot window?</span></label></li>
+          <li><label><input type="checkbox"><span><strong>Q9</strong> Who is the named security owner for this review, and do they prefer a live or async code walkthrough?</span></label></li>
+        </ul>
+        <p>Prepared by Layth. The private repository link and delivery hash are provided at handoff.</p>
+      </section>
+
+      <div class="chapter-baton">
+        <span class="baton-label">Back</span>
+        <span>every claim above, live on sample data</span>
+        <span class="baton-arrow" aria-hidden="true">←</span>
+        <strong><a href="index.html">Panel walkthrough</a></strong>
+      </div>
+    </article>
+  </main>
+</div>
+
+<footer>
+  <div class="inner">
+    <p><strong>Rounds</strong> · Security review and pilot plan</p>
+    <p>Everything stays on the workstation; the private repository link and delivery hash are provided at handoff.</p>
+  </div>
+</footer>
+
+<script>
+
+
+  // flow diagram: legend focuses one path, boxes explain themselves
+  (function () {
+    var svg = document.getElementById("flowSvg");
+    var cap = document.getElementById("flowCap");
+    var rest = cap.textContent;
+    document.querySelectorAll(".flow-key").forEach(function (k) {
+      k.addEventListener("mouseenter", function () { svg.dataset.focus = k.dataset.path; });
+      k.addEventListener("focus", function () { svg.dataset.focus = k.dataset.path; });
+      k.addEventListener("mouseleave", function () { delete svg.dataset.focus; });
+      k.addEventListener("blur", function () { delete svg.dataset.focus; });
+    });
+    svg.querySelectorAll(".node").forEach(function (n) {
+      n.addEventListener("mouseenter", function () { cap.textContent = n.dataset.cap; });
+      n.addEventListener("mouseleave", function () { cap.textContent = rest; });
+    });
+  })();
+
+  // checklists remember their state on this machine
+  document.querySelectorAll("[data-checklist]").forEach(function (list) {
+    var key = "rounds-docs-check-" + list.dataset.checklist;
+    var boxes = Array.prototype.slice.call(list.querySelectorAll("input[type=checkbox]"));
+    var counter = document.querySelector('[data-count="' + list.dataset.checklist + '"]');
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem(key)) || []; } catch (e) {}
+    function count() {
+      if (counter) counter.textContent =
+        boxes.filter(function (b) { return b.checked; }).length + " of " + boxes.length + " done";
+    }
+    boxes.forEach(function (b, i) {
+      b.checked = saved.indexOf(i) >= 0;
+      b.addEventListener("change", function () {
+        var now = [];
+        boxes.forEach(function (x, j) { if (x.checked) now.push(j); });
+        try { localStorage.setItem(key, JSON.stringify(now)); } catch (e) {}
+        count();
+      });
+    });
+    count();
+  });
+</script>
+<script src="docs.js"></script>
+</body>
+</html>

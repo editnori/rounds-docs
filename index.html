@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-text-size="standard">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="referrer" content="no-referrer" />
+<meta name="description" content="Install, triage, group, override, clear, and file with the Rounds side panel for CareLogic, on fictional sample data." />
+<title>Panel walkthrough | Rounds</title>
+<script>(function(){var d=document.documentElement;try{d.dataset.theme=localStorage.getItem("rounds-docs-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");d.dataset.textSize=localStorage.getItem("rounds-docs-text")||"standard"}catch(e){}})()</script>
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to the walkthrough</a>
+
+<div class="reading-progress" aria-hidden="true"><span id="readingProgress"></span></div>
+
+<header class="document-header">
+  <div class="header-inner">
+    <a class="site-name" href="index.html"><strong>Rounds</strong><span>Clinician documentation</span></a>
+    <nav aria-label="Primary">
+      <a href="index.html" aria-current="page">Panel walkthrough</a>
+      <a href="security.html">Security review</a>
+      <a href="https://github.com/editnori/rounds" rel="noreferrer" title="Private repository">Source</a>
+    </nav>
+    <div class="reader-tools" role="group" aria-label="Reading controls">
+      <div class="text-scale" role="group" aria-label="Article text size">
+        <button type="button" data-text-size="standard" aria-pressed="true">A</button>
+        <button type="button" data-text-size="large" aria-pressed="false">A+</button>
+      </div>
+      <button class="theme-button" id="themeButton" type="button" aria-pressed="false">Dark</button>
+    </div>
+    <button class="contents-button" id="contentsButton" type="button" aria-expanded="false" aria-controls="contentsRail">Contents</button>
+  </div>
+</header>
+
+<div class="document-shell">
+  <aside class="contents" id="contentsRail" aria-label="Documentation contents">
+    <p>On this page</p>
+    <nav>
+      <span class="contents-group">Walkthrough</span>
+      <a href="#before">Before you begin</a>
+      <a href="#load">Install</a>
+      <a href="#read">Inbox</a>
+      <a href="#why">Provenance</a>
+      <a href="#select">Selection</a>
+      <a href="#group">Grouping</a>
+      <a href="#move">Moving</a>
+      <a href="#reviewed">Reviewed</a>
+      <a href="#file">Filing</a>
+      <a href="#privacy-step">Data &amp; privacy</a>
+      <a href="#live">Live mode</a>
+      <span class="contents-group">Security review</span>
+      <a href="security.html">Review and pilot plan</a>
+    </nav>
+    <div class="contents-version">
+      <span>Panel walkthrough</span>
+      <code>rounds 0.2.0</code>
+      <code>nine steps</code>
+      <code>fictional screenshots</code>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <article>
+      <header class="article-header" id="before">
+        <div class="publication-line">
+          <span>Start-to-finish walkthrough</span>
+          <span>Release 0.2.0</span>
+          <span>Fictional screenshots</span>
+        </div>
+        <h1>Panel walkthrough</h1>
+        <p class="article-deck">This page covers install, every triage flow on the built-in fictional sample, and live mode. Everything runs in the browser; nothing leaves the machine. The <a href="security.html">security review</a> covers what IT checks before the trial.</p>
+
+        <div class="deliverable-callout" role="note" aria-label="Data boundary">
+          <div>
+            <span class="state-lozenge good">Stays local</span>
+            <strong>Everything</strong>
+            <p>Memos read from the page, groups, flags, drafts, and the action log live in this Chrome profile on this computer. Rounds makes no network requests. The manifest forbids them, and the font is bundled so nothing at all is fetched.</p>
+          </div>
+          <div>
+            <span class="state-lozenge warn">Never in v0.2</span>
+            <strong>AI, servers, accounts, patient messaging</strong>
+            <p>Grouping is plain word matching, printed in full inside the panel. Auto-drafted replies and patient-facing features are explicitly out of scope for the pilot.</p>
+          </div>
+        </div>
+
+        <dl class="release-metadata">
+          <div><dt>Host</dt><dd>Chrome 123 or newer</dd></div>
+          <div><dt>Format</dt><dd>MV3 side panel</dd></div>
+          <div><dt>EHR</dt><dd>Qualifacts CareLogic</dd></div>
+          <div><dt>Sample mode</dt><dd>On by default</dd></div>
+          <div><dt>Rules</dt><dd>6 groups · rule set v1</dd></div>
+          <div><dt>Network access</dt><dd>None</dd></div>
+        </dl>
+
+        <aside class="boundary-note"><strong>Use only an approved workstation and CareLogic account.</strong> The screenshots below use the included fictional sample; every client name, chart ID, and date of birth is invented. A live run reads real memo-to-chart alerts, which are PHI; they stay in the browser, and the same agency controls that protect CareLogic itself must cover the machine running Rounds.</aside>
+      </header>
+
+      <section class="walkthrough-step" id="load">
+        <div class="section-number" aria-hidden="true">01</div>
+        <h2>Install</h2>
+        <p>Open <code>chrome://extensions</code>, switch on <strong>Developer mode</strong> (top right), choose <strong>Load unpacked</strong>, and select the <code>margin-extension</code> folder from the delivery. Then click the Rounds icon in the toolbar; the panel docks beside whatever page is open.</p>
+        <p>With no CareLogic tab open, the mode chip says <strong>Sample</strong> and the panel loads nine sample memos so you can try every flow on this page right away. The welcome sheet covers the three things worth knowing before the first click; <strong>Got it</strong> hides it permanently (with an undo).</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/01-inbox-first-run.png" target="_blank" rel="noreferrer"><img src="screenshots/01-inbox-first-run.png" alt="Rounds first run: welcome sheet, amber Sample chip, search, status tabs, group pills, and the first sample memos." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 1.</span> First open in sample mode. The amber chip means nothing here is a real client.<a class="full" href="screenshots/01-inbox-first-run.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+        <aside class="method-note"><strong>Stop if the chip does not say Sample.</strong> On a workstation that has never opened CareLogic, any other state means the install did not come from the delivered folder. Remove the extension and load it again before continuing.</aside>
+      </section>
+
+      <section class="walkthrough-step" id="read">
+        <div class="section-number" aria-hidden="true">02</div>
+        <h2>Inbox</h2>
+        <p>Each memo is one sheet: client name, age of the alert, sender, group marks, and the actual narrative (CareLogic's own list only shows boilerplate), so triage happens from the list instead of behind six clicks. The overview strip's Unread, Flagged, and Stale numbers are buttons; each filters the list. Ages past four weeks turn amber.</p>
+        <ul>
+          <li><strong>Filled dot</strong> next to a group name: you set it by hand. It is yours until you remove it.</li>
+          <li><strong>Hollow dot</strong>: a word rule applied it. Rules never override you; manual wins.</li>
+          <li><strong>Ungrouped</strong> in the pill row is the working queue: memos nothing has sorted yet.</li>
+        </ul>
+        <p>Keyboard: <code>j</code>/<code>k</code> move, <code>Enter</code> opens, <code>/</code> jumps to search, <code>Esc</code> backs out of anything, in order.</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/02-inbox-groups.png" target="_blank" rel="noreferrer"><img src="screenshots/02-inbox-groups.png" alt="Sample inbox showing group marks: hollow dots for rule-applied groups, filled dots for manual ones, and the group pill row with counts." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 2.</span> Hollow marks come from rules; filled marks are yours. The pill counts include both.<a class="full" href="screenshots/02-inbox-groups.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <section class="walkthrough-step" id="why">
+        <div class="section-number" aria-hidden="true">03</div>
+        <h2>Provenance</h2>
+        <p>Open the Merriweather memo. The <strong>Refill · auto</strong> chip came from the refill word rule, matching words already in the memo: refill, pharmacy, prior auth. Press the chip body and the panel shows its evidence: which rule, and which exact words it matched.</p>
+        <ul>
+          <li><strong>Keep</strong> promotes the group to manual: the filled dot is now yours and no rule change can take it away.</li>
+          <li><strong>Remove</strong> (or the chip's <strong>✕</strong>) deletes the group <em>and records an override</em>: that rule will never re-apply to that memo, across every rescan and reload. False positives are corrected once.</li>
+        </ul>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/03-detail-provenance.png" target="_blank" rel="noreferrer"><img src="screenshots/03-detail-provenance.png" alt="Memo detail with the Refill auto chip's provenance popover open: grouped by rule, Refill request words, matched refill, Pharmacy, prior auth, with Keep and Remove buttons." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 3.</span> Every auto group shows its work: the rule, the rule-set version, and the exact words it matched.<a class="full" href="screenshots/03-detail-provenance.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+        <aside class="method-note"><strong>There is no AI in grouping.</strong> It's plain word matching. The same memo gets the same groups on every machine, every time, and the complete vocabulary is printed inside the panel (step 09).</aside>
+      </section>
+
+      <section class="walkthrough-step" id="select">
+        <div class="section-number" aria-hidden="true">04</div>
+        <h2>Selection</h2>
+        <p>Hover any row and its avatar becomes a check circle; click it to start selecting. <code>Ctrl</code>-click (<code>Cmd</code> on Mac) toggles rows directly, <code>Shift</code>-click selects a range, and the checklist button beside the search field enters selection mode explicitly. The footer swaps its tally for the selection bar: count, <strong>All n</strong> (select everything in the current filter), <strong>Group</strong>, <strong>Reviewed</strong>, and exit.</p>
+        <p>Search, sort, and every filter stay live while selecting, and the selection survives them; the count shows <em>(n not shown)</em> when selected memos are filtered out of view, and actions still apply to all of them.</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/04-selection.png" target="_blank" rel="noreferrer"><img src="screenshots/04-selection.png" alt="Selection mode with three memos checked in blue and the footer selection bar showing 3 selected, All 9, Group, Reviewed, and an exit button." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 4.</span> Selection replaces the footer tally; the inbox above keeps filtering and searching normally.<a class="full" href="screenshots/04-selection.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <section class="walkthrough-step" id="group">
+        <div class="section-number" aria-hidden="true">05</div>
+        <h2>Grouping</h2>
+        <p>Press <strong>Group</strong>. The sheet lists all six groups with the selection's current state on the right: a check when every selected memo has the group, a dash when some do. Tapping a row adds the group to all of them (or removes it from all of them); the sheet stays open so groups can stack, and every tap gets its own toast with <strong>Undo</strong>.</p>
+        <p>This is the manual override in both directions: hand-placed groups that rules can never disturb, and one-tap removal that rules remember from then on.</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/05-group-sheet.png" target="_blank" rel="noreferrer"><img src="screenshots/05-group-sheet.png" alt="Group sheet titled Group 3 memos listing Safety, Refill, Meds, Scheduling, Paperwork, Follow up with mixed-state dashes." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 5.</span> Mixed states (dash) resolve to "everyone gets it" on first tap. Same behavior as Gmail labels: one component, no folders.<a class="full" href="screenshots/05-group-sheet.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <section class="walkthrough-step" id="move">
+        <div class="section-number" aria-hidden="true">06</div>
+        <h2>Moving</h2>
+        <p>Filter to a group first (say <strong>Paperwork</strong>), then select and press <strong>Group</strong>. Because you are standing inside a group, the sheet becomes a move: <em>Move 3 out of Paperwork</em>. Tapping a destination adds it and removes Paperwork in one step; the rows visibly leave the filtered view, and one <strong>Undo</strong> reverses both sides.</p>
+        <p>Quick demo: filter to <strong>Ungrouped</strong>, press <strong>All n</strong>, group them, and the working queue drains to zero.</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/06-move-sheet.png" target="_blank" rel="noreferrer"><img src="screenshots/06-move-sheet.png" alt="Move sheet titled Move 3 out of Paperwork with the Paperwork row disabled and checked, other groups available as destinations." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 6.</span> Standing in a group filter turns the same sheet into a move; the current group is pinned and disabled.<a class="full" href="screenshots/06-move-sheet.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <section class="walkthrough-step" id="reviewed">
+        <div class="section-number" aria-hidden="true">07</div>
+        <h2>Reviewed</h2>
+        <p><strong>Reviewed</strong> is the one action that reaches into CareLogic's own list: it clicks the alert's Remove link, exactly as you would. The very first press pauses to say so, in place (<em>Reviewed clears this alert in CareLogic's list too</em>) with <strong>Clear alert</strong> and <strong>Keep</strong>. Answer once; it never asks again.</p>
+        <ul>
+          <li>In sample mode, clears are instant and every one has <strong>Undo</strong>.</li>
+          <li>In live mode, bulk clears arm first: the button changes to <em>Tap again to clear 5 in CareLogic</em> and a second press confirms. Rows that can't be matched for sure are skipped and reported, never guessed at.</li>
+        </ul>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/07-teach-reviewed.png" target="_blank" rel="noreferrer"><img src="screenshots/07-teach-reviewed.png" alt="The teach strip on first Reviewed press: Reviewed clears this alert in CareLogic's list too, with Clear alert and Keep buttons." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 7.</span> The one-time explanation lives in the header row. No modal, no recurring nag.<a class="full" href="screenshots/07-teach-reviewed.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <section class="walkthrough-step" id="file">
+        <div class="section-number" aria-hidden="true">08</div>
+        <h2>Filing</h2>
+        <p>Write the narrative in the composer (<code>Ctrl+Enter</code> files; plain <code>Enter</code> is a newline, because clinical notes have paragraphs). Sample mode then walks CareLogic's real five-step filing sequence (service document, tracking memo, entry, electronic signature, file-and-notify), including a signature field that is used once and never stored, exactly like the EHR's own signature screen.</p>
+        <p>In live mode the same button is labeled <strong>Write into memo form</strong>: it types your narrative into CareLogic's own field and stops. Review and submit happen in the EHR; Rounds never signs and never submits on its own.</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/08-filing-steps.png" target="_blank" rel="noreferrer"><img src="screenshots/08-filing-steps.png" alt="The filing simulation mid-run: five steps with checkmarks appearing: open service document, select tracking memo, fill entry, apply signature, file and notify." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 8.</span> The sample filing shows every step CareLogic requires: fourteen clicks across four screens, done in one.<a class="full" href="screenshots/08-filing-steps.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <section class="walkthrough-step" id="privacy-step">
+        <div class="section-number" aria-hidden="true">09</div>
+        <h2>Data &amp; privacy</h2>
+        <p>Press the mode chip (or the sliders button in the header). One scrollable view holds everything IT will ask about: connection state and last-read freshness, the pause switch, the complete grouping vocabulary with per-rule switches and live match counts, your recorded overrides, plain-language passages on what Rounds reads / writes / sends (sends: nothing), the exact host list from the manifest, a byte-level inventory of what is stored on the machine, and an action log of every click and write the panel performed in CareLogic (chart IDs only, refusals included).</p>
+        <div class="shot-pair">
+          <figure class="panel-shot">
+            <a class="frame" href="screenshots/09-privacy-connection.png" target="_blank" rel="noreferrer"><img src="screenshots/09-privacy-connection.png" alt="Data and privacy view: connection sheet with mode, reading-from, last read, pause and sample switches, and the auto-grouping master switch." loading="lazy" decoding="async" /></a>
+            <figcaption><span>Screen 9.</span> Connection, pause, and the auto-grouping master switch.<a class="full" href="screenshots/09-privacy-connection.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+          </figure>
+          <figure class="panel-shot">
+            <a class="frame" href="screenshots/10-privacy-rules.png" target="_blank" rel="noreferrer"><img src="screenshots/10-privacy-rules.png" alt="Rule sheets for Safety words and Refill request words showing every matched term as a chip, live match counts, and per-rule switches." loading="lazy" decoding="async" /></a>
+            <figcaption><span>Screen 10.</span> The whole classifier, printed: every word, every rule, a switch on each.<a class="full" href="screenshots/10-privacy-rules.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+          </figure>
+        </div>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/11-privacy-stored.png" target="_blank" rel="noreferrer"><img src="screenshots/11-privacy-stored.png" alt="Stored on this computer sheet with counts for memos, triage marks, actions, drafts, and the two-step Clear all local data button." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 11.</span> The storage inventory and the two-step <em>Clear all local data</em>: armed on first press, ten-second undo after the second.<a class="full" href="screenshots/11-privacy-stored.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+        <aside class="boundary-note"><strong>Stop if anything on this screen surprises you.</strong> The view is generated from the extension's real state: the manifest host list, live storage byte counts, the actual action log. If it disagrees with what IT approved, the build on the machine is not the approved build.</aside>
+      </section>
+
+      <section class="walkthrough-step" id="live">
+        <div class="section-number" aria-hidden="true">→</div>
+        <h2>Live mode</h2>
+        <p>Open CareLogic's My Alerts page in the same window and the chip turns green <strong>Live</strong>: rows now come from the page, the sample memos go away for good, and Open / Reviewed / Write drive CareLogic's own links and fields, addressed by client identity re-resolved at click time; ambiguous matches refuse rather than touch the wrong chart. Closing the tab keeps the last read on screen with host actions disabled; thirty minutes later it expires. The trial build pins <code>host_permissions</code> to the agency's exact CareLogic hostname before distribution.</p>
+        <p>Dark theme is built in. The toggle is in the header, and the dark inbox is the same information in the same places.</p>
+        <figure class="panel-shot">
+          <a class="frame" href="screenshots/12-inbox-dark.png" target="_blank" rel="noreferrer"><img src="screenshots/12-inbox-dark.png" alt="The inbox in dark theme: near-black canvas, lifted memo sheets, the same marks and counts." loading="lazy" decoding="async" /></a>
+          <figcaption><span>Screen 12.</span> Dark theme. Conditional color carries the same meanings: blue unread, coral flags, amber time-pressure, green live.<a class="full" href="screenshots/12-inbox-dark.png" target="_blank" rel="noreferrer">Open full size</a></figcaption>
+        </figure>
+      </section>
+
+      <div class="chapter-baton">
+        <span class="baton-label">Next</span>
+        <span>what IT reviews before the staging trial</span>
+        <span class="baton-arrow" aria-hidden="true">→</span>
+        <strong><a href="security.html">Security review &amp; pilot plan</a></strong>
+      </div>
+
+      </article>
+  </main>
+</div>
+
+<footer>
+  <div class="inner">
+    <p><strong>Rounds</strong> · Panel walkthrough</p>
+    <p>Everything stays on the workstation; sample data is fictional; the private repository link is added at handoff.</p>
+  </div>
+</footer>
+
+<script>
+
+</script>
+<script src="docs.js"></script>
+</body>
+</html>
