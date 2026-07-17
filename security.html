@@ -7,6 +7,7 @@
 <meta name="description" content="Security review and pilot plan for the Rounds side panel: architecture, data flow, permissions, threats, and the staging trial plan for Oaklawn IT." />
 <title>Security review | Rounds</title>
 <script>(function(){var d=document.documentElement;try{d.dataset.theme=localStorage.getItem("rounds-docs-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");d.dataset.textSize=localStorage.getItem("rounds-docs-text")||"standard"}catch(e){}})()</script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
 <link rel="stylesheet" href="docs.css" />
 </head>
 <body>
@@ -16,7 +17,10 @@
 
 <header class="document-header">
   <div class="header-inner">
-    <a class="site-name" href="index.html"><strong>Rounds</strong><span>Clinician documentation</span></a>
+    <a class="site-name" href="index.html"><svg class="site-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M16 3.6 26.8 9.8v12.4L16 28.4 5.2 22.2V9.8Z"/>
+      <path d="M16 28.4V16m0 0L5.2 9.8M16 16l10.8-6.2" opacity="0.55"/>
+    </svg><span class="site-words"><strong>Rounds</strong><span>Clinician documentation</span></span></a>
     <nav aria-label="Primary">
       <a href="index.html">Panel walkthrough</a>
       <a href="security.html" aria-current="page">Security review</a>
@@ -48,13 +52,12 @@
       <a href="#sec-threats">Threats</a>
       <a href="#sec-rules">Auto-grouping</a>
       <a href="#sec-pilot">Pilot criteria</a>
-      <a href="#sec-rollout">Rollout</a>
       <a href="#sec-questions">Open questions for IT</a>
     </nav>
     <div class="contents-version">
       <span>Security review</span>
       <code>rounds 0.2.0</code>
-      <code>11 sections</code>
+      <code>10 sections</code>
       <code>verify as you read</code>
     </div>
   </aside>
@@ -204,18 +207,8 @@
         </ol>
       </section>
 
-      <section class="walkthrough-step" id="sec-rollout">
-        <h2>10. Rollout</h2>
-        <ul>
-          <li><strong>Phase 0: review (this document).</strong> Packet review, code walkthrough, live network capture. Exit: IT sign-off for staging.</li>
-          <li><strong>Phase 1: staging.</strong> Staging CareLogic account (test patients only), verify selectors against the agency build, one workstation. Exit: scan + all three commands verified on the staging build.</li>
-          <li><strong>Phase 2: pilot.</strong> 3 to 5 clinicians, 4 weeks, weekly 20-minute feedback session. Kill switch: Chrome policy blocklist or simple removal; revocation is complete because everything is local.</li>
-          <li><strong>Phase 3: go/no-go.</strong> Review against §9; scope v0.3 (candidate items: agency-defined groups, vetted rule additions, reading the full note behind Select; explored: nursing/refill workflow expansion).</li>
-        </ul>
-      </section>
-
-      <section class="walkthrough-step" id="sec-questions">
-        <h2>11. Open questions for IT</h2>
+            <section class="walkthrough-step" id="sec-questions">
+        <h2>10. Open questions for IT</h2>
         <div class="check-head"><p>Check each one off as it gets an answer; the page remembers.</p><span class="check-count" data-count="itq"></span></div>
         <ul class="check-list" data-checklist="itq">
           <li><label><input type="checkbox"><span><strong>Q1</strong> Exact staging and production CareLogic hostnames, so the trial build pins <code>host_permissions</code> to them.</span></label></li>
